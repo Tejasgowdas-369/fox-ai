@@ -32,7 +32,7 @@ Fox AI is a lightweight, privacy-focused, 100% offline desktop-style AI chatbot.
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/fox-ai.git
+git clone https://github.com/Tejasgowdas-369/fox-ai.git
 cd fox-ai
 ```
 
