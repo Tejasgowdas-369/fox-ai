@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = document.getElementById("send-btn");
   const clearBtn = document.getElementById("clear-btn");
   
+  const attachBtn = document.getElementById("attach-btn");
+  const fileInput = document.getElementById("file-attachment-input");
+  const previewContainer = document.getElementById("attachment-preview-container");
+  
   const chatHistory = document.getElementById("chat-history");
   const welcomeMessage = document.getElementById("welcome-message");
   const thinkingIndicator = document.getElementById("thinking-indicator");
@@ -32,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let isGenerating = false;
   let currentAssistantBubble = null;
   let currentAssistantText = "";
+  let attachedFiles = [];
   
   // Set host coordinates dynamically
   const HTTP_API_URL = `${window.location.protocol}//${window.location.host}`;
@@ -197,6 +202,35 @@ document.addEventListener("DOMContentLoaded", () => {
           setGeneratingState(false);
           break;
 
+        case "image":
+          // Hide thinking state
+          thinkingIndicator.style.display = "none";
+          
+          // Create assistant bubble containing the generated image
+          const imageRow = document.createElement("div");
+          imageRow.className = `chat-row assistant`;
+
+          const imageBubble = document.createElement("div");
+          imageBubble.className = "message-bubble";
+          
+          const imageLabel = document.createElement("p");
+          imageLabel.innerHTML = `🎨 Generated image for: <em>"${data.prompt}"</em>`;
+          
+          const imgEl = document.createElement("img");
+          imgEl.src = `data:image/jpeg;base64,${data.content}`;
+          imgEl.className = "chat-image-attachment";
+          imgEl.alt = data.prompt;
+          
+          imageBubble.appendChild(imageLabel);
+          imageBubble.appendChild(imgEl);
+          imageRow.appendChild(imageBubble);
+          chatHistory.appendChild(imageRow);
+          scrollToBottom();
+
+          // Unlock text input form
+          setGeneratingState(false);
+          break;
+
         case "error":
           thinkingIndicator.style.display = "none";
           appendMessageBubble("assistant", `⚠️ Error: ${data.content}`);
@@ -251,6 +285,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * Appends a message bubble with custom raw HTML (for files visualization).
+   */
+  function appendMessageBubbleCustom(role, htmlContent) {
+    if (welcomeMessage.style.display !== "none") {
+      welcomeMessage.style.display = "none";
+    }
+
+    const row = document.createElement("div");
+    row.className = `chat-row ${role}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.innerHTML = htmlContent;
+    
+    row.appendChild(bubble);
+    chatHistory.appendChild(row);
+    scrollToBottom();
+
+    if (role === "assistant") {
+      currentAssistantBubble = bubble;
+      currentAssistantText = "";
+    }
+  }
+
+  /**
    * Adjusts UI states based on generation activities.
    */
   function setGeneratingState(generating) {
@@ -280,21 +339,63 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isGenerating) return;
 
     const message = userInput.value.trim();
-    if (!message) return;
+    if (!message && attachedFiles.length === 0) return;
 
-    // Append user message
-    appendMessageBubble("user", message);
+    // Render attachments visualization inside the user's bubble
+    let userBubbleHTML = "";
+    if (message) {
+      userBubbleHTML += `<p>${parseContent(message)}</p>`;
+    }
     
-    // Reset textarea layout
+    if (attachedFiles.length > 0) {
+      userBubbleHTML += `<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">`;
+      attachedFiles.forEach(file => {
+        const icon = file.type === "image" ? "🖼️" : "📄";
+        userBubbleHTML += `
+          <div class="attachment-pill type-${file.type}" style="animation: none; margin: 0; background: rgba(255,255,255,0.08);">
+            <span>${icon}</span>
+            <span>${file.name}</span>
+          </div>
+        `;
+      });
+      userBubbleHTML += `</div>`;
+    }
+
+    // Append custom user message bubble
+    appendMessageBubbleCustom("user", userBubbleHTML);
+    
+    // Construct JSON payload
+    const payload = {
+      message: message,
+      files: [],
+      images: []
+    };
+
+    attachedFiles.forEach(file => {
+      if (file.type === "image") {
+        // Strip header prefix data:image/...;base64,
+        const base64Data = file.rawData.split(",")[1] || file.rawData;
+        payload.images.push(base64Data);
+      } else {
+        payload.files.push({
+          name: file.name,
+          content: file.rawData
+        });
+      }
+    });
+
+    // Reset inputs and state
     userInput.value = "";
     userInput.style.height = "auto";
+    attachedFiles = [];
+    renderAttachmentPills();
 
     // Set generating state
     setGeneratingState(true);
 
     // Send payload to WebSocket
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ message: message }));
+      ws.send(JSON.stringify(payload));
     } else {
       appendMessageBubble("assistant", "⚠️ Error: WebSocket connection is offline.");
       setGeneratingState(false);
@@ -337,4 +438,96 @@ document.addEventListener("DOMContentLoaded", () => {
       chatForm.dispatchEvent(new Event("submit"));
     }
   });
+
+  /* =====================================================================
+     Attachment Handling & File Reader Implementations
+     ===================================================================== */
+
+  // Trigger file dialog
+  attachBtn.addEventListener("click", () => {
+    if (isGenerating) return;
+    fileInput.click();
+  });
+
+  // Handle files input changes
+  fileInput.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (attachedFiles.length + files.length > 5) {
+      alert("You can attach a maximum of 5 files.");
+      fileInput.value = "";
+      return;
+    }
+
+    files.forEach(file => {
+      // 10MB validation limit
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" exceeds the 10MB size limit.`);
+        return;
+      }
+
+      const fileType = file.type.startsWith("image/") ? "image" : "file";
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        attachedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: fileType,
+          rawData: event.target.result
+        });
+        renderAttachmentPills();
+      };
+
+      if (fileType === "image") {
+        reader.readAsDataURL(file); // Reads as base64 string
+      } else {
+        reader.readAsText(file); // Reads code or text document
+      }
+    });
+
+    fileInput.value = ""; // Clear file picker value
+  });
+
+  // Render attachment pills in preview panel
+  function renderAttachmentPills() {
+    if (attachedFiles.length === 0) {
+      previewContainer.innerHTML = "";
+      previewContainer.style.display = "none";
+      return;
+    }
+
+    previewContainer.innerHTML = "";
+    previewContainer.style.display = "flex";
+
+    attachedFiles.forEach((file, index) => {
+      const pill = document.createElement("div");
+      pill.className = `attachment-pill type-${file.type}`;
+      
+      const icon = file.type === "image" ? "🖼️" : "📄";
+      const sizeKB = Math.round(file.size / 1024);
+      
+      pill.innerHTML = `
+        <span class="pill-icon">${icon}</span>
+        <span class="pill-name" title="${file.name}">${truncateString(file.name, 18)} (${sizeKB}KB)</span>
+        <span class="pill-remove" data-index="${index}">✕</span>
+      `;
+      
+      previewContainer.appendChild(pill);
+    });
+
+    // Wire up delete controls on attachment pills
+    previewContainer.querySelectorAll(".pill-remove").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const index = parseInt(e.target.getAttribute("data-index"));
+        attachedFiles.splice(index, 1);
+        renderAttachmentPills();
+      });
+    });
+  }
+
+  function truncateString(str, num) {
+    if (str.length <= num) return str;
+    return str.slice(0, num) + "...";
+  }
 });

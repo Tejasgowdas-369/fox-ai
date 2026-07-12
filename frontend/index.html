@@ -132,13 +132,31 @@
         </button>
         
         <div class="input-wrapper">
-          <textarea 
-            id="user-input" 
-            placeholder="Send a secure message to Fox..." 
-            rows="1"
-            autocomplete="off"
-            required
-          ></textarea>
+          <!-- Attachment preview drawer -->
+          <div class="attachment-preview-container" id="attachment-preview-container" style="display: none;"></div>
+          
+          <div class="input-row">
+            <button type="button" class="btn-attach" id="attach-btn" title="Attach files/images (Max 5 files, 10MB each)">
+              <span class="attach-icon">＋</span>
+            </button>
+            
+            <textarea 
+              id="user-input" 
+              placeholder="Send a secure message, or type /image to generate..." 
+              rows="1"
+              autocomplete="off"
+              required
+            ></textarea>
+          </div>
+          
+          <!-- Hidden native file input -->
+          <input 
+            type="file" 
+            id="file-attachment-input" 
+            multiple 
+            style="display: none;" 
+            accept=".txt,.py,.js,.json,.csv,.pdf,.md,.css,.html,.png,.jpg,.jpeg,.gif"
+          >
         </div>
 
         <button type="submit" class="btn-primary" id="send-btn" disabled>

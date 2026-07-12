@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 
 from .config import MODEL_PATH, N_CTX, IN_MEMORY_GUARANTEE, format_prompt
 from .model import ModelManager
+from .image_generator import LocalImageGenerator
 
 # =====================================================================
 # IN-MEMORY ONLY GUARANTEE
@@ -132,11 +133,110 @@ async def chat_endpoint(websocket: WebSocket):
             # Wait for message from client
             data = await websocket.receive_json()
             user_message = data.get("message", "").strip()
-            if not user_message:
+            files_payload = data.get("files", [])
+            images_payload = data.get("images", [])
+
+            if not user_message and not files_payload and not images_payload:
                 continue
 
+            # ---------------------------------------------------------
+            # Option A: Local Image Generation (Stable Diffusion)
+            # ---------------------------------------------------------
+            if user_message.lower().startswith("/image"):
+                prompt_text = user_message[6:].strip()
+                if not prompt_text:
+                    await websocket.send_json({
+                        "type": "error",
+                        "content": "Please provide a description, e.g., `/image a cute cartoon fox`."
+                    })
+                    continue
+
+                # Initialize generation loader state
+                await websocket.send_json({
+                    "type": "start",
+                    "prompt_tokens": 0
+                })
+                
+                await websocket.send_json({
+                    "type": "token",
+                    "content": "🎨 Generating image locally on CPU using Stable Diffusion (SD-Turbo)... This will take a few seconds..."
+                })
+
+                loop = asyncio.get_running_loop()
+                try:
+                    generator = LocalImageGenerator.get_instance()
+                    # Run CPU-blocking Stable Diffusion in thread pool executor
+                    img_base64 = await loop.run_in_executor(
+                        None, 
+                        generator.generate_image_base64, 
+                        prompt_text
+                    )
+                    
+                    # Return generated image base64 packet
+                    await websocket.send_json({
+                        "type": "image",
+                        "content": img_base64,
+                        "prompt": prompt_text
+                    })
+                    
+                    # Log generated indicator in session memory
+                    chat_history.append({
+                        "role": "assistant",
+                        "content": f"[Local SD-Turbo generated image for prompt: '{prompt_text}']"
+                    })
+                    
+                    await websocket.send_json({
+                        "type": "usage",
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0
+                    })
+                except Exception as e:
+                    await websocket.send_json({
+                        "type": "error",
+                        "content": f"Image Generation Failed: {str(e)}"
+                    })
+                continue
+
+            # ---------------------------------------------------------
+            # Option B: Local Document/Code File Context Injection
+            # ---------------------------------------------------------
+            context_prefix = ""
+            if files_payload:
+                context_prefix += "--- Attached Local Files Context ---\n"
+                for file_item in files_payload:
+                    filename = file_item.get("name", "unknown_file")
+                    content = file_item.get("content", "")
+                    context_prefix += f"[File: {filename}]\n{content}\n[End of File]\n\n"
+                context_prefix += "------------------------------------\n\n"
+            
+            # Combine attachments with prompt message
+            full_user_prompt = context_prefix + user_message
+
+            # Check if user sent an image, but model is not vision-capable
+            if images_payload:
+                # Add a visual assistant warning message about vision model requirements
+                # while parsing standard prompt message
+                await websocket.send_json({
+                    "type": "start",
+                    "prompt_tokens": 0
+                })
+                await websocket.send_json({
+                    "type": "token",
+                    "content": "⚠️ [Image upload detected] I currently do not support local image analysis. To describe images offline, please place a Llama-3.2-Vision model and its corresponding mmproj file in your /models folder.\n\n"
+                })
+                # Proceed with standard text message processing
+                if not user_message:
+                    await websocket.send_json({
+                        "type": "usage",
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0
+                    })
+                    continue
+
             # Append to session history (RAM)
-            chat_history.append({"role": "user", "content": user_message})
+            chat_history.append({"role": "user", "content": full_user_prompt})
 
             # Format full conversation context
             formatted_prompt = format_prompt(chat_history, manager.model_name)
