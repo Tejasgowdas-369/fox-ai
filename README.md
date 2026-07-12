@@ -97,15 +97,56 @@ http://127.0.0.1:8000
  How It Works (Local Architecture)
 
 ```mermaid
-graph TD
-    User[Browser Client] <-->|WebSocket Stream| FastAPI[FastAPI Server]
-    FastAPI <-->|Context Formatter| Singleton[Llama Singleton Loader]
-    Singleton <-->|Local Inference| GGUF[(models/gemma-2-2b-it-Q4_K_M.gguf)]
+flowchart TD
+    subgraph Client ["Client Layer (100% Offline Browser)"]
+        UI["UI Interface (Index.html / JS)"]
+        Stats["Live Dashboard (Token Counters, Latency Timer)"]
+        WSClient["WebSocket Client"]
+        UI <--> WSClient
+        Stats <--> WSClient
+    end
+
+    subgraph Server ["FastAPI Backend Server (Localhost)"]
+        WSServer["WebSocket Endpoint (/chat)"]
+        Health["Health Endpoint (/api/health)"]
+        Formatter["Prompt Formatter (Dynamic: Gemma, ChatML, Llama-3)"]
+        Queue["Async Queue (Thread-Safe Bridge)"]
+        
+        WSServer <--> Formatter
+        WSServer <--> Queue
+    end
+
+    subgraph Inference ["Local Inference Engine (llama.cpp)"]
+        Singleton["Model Manager (Thread-Safe Singleton)"]
+        LlamaCPP["llama.cpp C++ Engine"]
+        FolderScanner["GGUF Folder Auto-Scanner"]
+        GGUF[("Local GGUF Models Folder\n(Qwen / Llama-3.2 / Gemma-2 / Phi-3 / TinyLlama)")]
+        
+        FolderScanner <--> GGUF
+        Singleton --> FolderScanner
+        Singleton <--> LlamaCPP
+        LlamaCPP <--> GGUF
+    end
+
+    WSClient <-->|Bi-Directional JSON Streams| WSServer
+    WSClient -.->|HTTP Polling| Health
+    Formatter -->|Prompt Context Tokens| Singleton
+    Queue <-->|Token Producer Thread| LlamaCPP
+
+    %% Custom Styling
+    style UI fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
+    style Stats fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#f8fafc
+    style WSClient fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
     
-    style User fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
-    style FastAPI fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#f8fafc
-    style Singleton fill:#b45309,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
+    style WSServer fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#f8fafc
+    style Health fill:#1e293b,stroke:#a855f7,stroke-width:1px,color:#f8fafc
+    style Formatter fill:#1e293b,stroke:#a855f7,stroke-width:1px,color:#f8fafc
+    style Queue fill:#1e293b,stroke:#ea580c,stroke-width:2px,color:#f8fafc
+    
+    style Singleton fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#f8fafc
+    style LlamaCPP fill:#b45309,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
     style GGUF fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#f8fafc
+    style FolderScanner fill:#312e81,stroke:#6366f1,stroke-width:1px,color:#f8fafc
 ```
 
 1.  WebSocket Handshake: On connecting to the frontend, a persistent WebSocket tunnel is established at `ws://127.0.0.1:8000/chat`.
