@@ -13,12 +13,14 @@ Fox AI is a lightweight, privacy-focused, 100% offline desktop-style AI chatbot.
 
 ---
 
- Key Features
-*   Zero-Build Frontend:Written in pure Vanilla HTML, CSS, and JS. Served directly from the FastAPI server. No Node.js, `npm install`, or bundlers required.
-*   Singleton Model Architecture:The GGUF model is loaded once as a thread-safe singleton on server startup, preventing memory-reload leaks and requests collision.
-*   Live Token Stats: Measures and displays prompt tokens, generated tokens, and total session tokens in real time.
-*   Latency Tracking: Computes and displays Time to First Token (TTFT) in milliseconds so you can easily profile hardware performance.
-*   Visual Excellence: Premium responsive dark-mode styling with glassmorphism panels, glowing states, pulsing typing animations, and custom scroll areas.
+## Key Features
+*   **Zero-Build Frontend:** Written in pure Vanilla HTML, CSS, and JS. Served directly from the FastAPI server. No Node.js, `npm install`, or bundlers required.
+*   **Local File & Code Analysis:** Supports attaching up to 5 files (up to 10MB each) like PDF, CSV, or code files. Parses and injects the context directly into the prompt stream offline.
+*   **Local Image Generation:** Intercepts `/image [prompt]` to generate 512x512 images using a CPU-optimized Stable Diffusion (SD-Turbo) pipeline, with automated idle-unload memory reclamation.
+*   **Singleton Model Architecture:** The GGUF model is loaded once as a thread-safe singleton on server startup, preventing memory-reload leaks and requests collision.
+*   **Live Token Stats:** Measures and displays prompt tokens, generated tokens, and total session tokens in real time.
+*   **Latency Tracking:** Computes and displays Time to First Token (TTFT) in milliseconds so you can easily profile hardware performance.
+*   **Visual Excellence:** Premium responsive dark-mode styling with glassmorphism panels, glowing states, pulsing typing animations, and custom scroll areas.
 
 ---
 
