@@ -42,3 +42,6 @@ models/*.gguf
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Temporary uploads folder
+temp_uploads/
