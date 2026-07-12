@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fox AI - Fully offline, privacy-first local LLM chatbot powered by llama.cpp.">
+  <title>Fox AI — Offline-First Local Chatbot</title>
+  
+  <!-- 100% Local Fonts used. No external CDN imports. -->
+  
+  <!-- Custom Vanilla Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background Glows -->
+  <div class="glow-bg-1"></div>
+  <div class="glow-bg-2"></div>
+
+  <!-- Main Application Container -->
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <!-- Geometric Fox SVG Logo -->
+        <div class="logo-container">
+          <svg class="fox-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 90L15 45L30 15L50 45L70 15L85 45L50 90Z" fill="url(#fox-gradient)" />
+            <path d="M50 90L38 60H62L50 90Z" fill="#FFFFFF" opacity="0.15" />
+            <circle cx="40" cy="40" r="3" fill="#FFFFFF" opacity="0.8"/>
+            <circle cx="60" cy="40" r="3" fill="#FFFFFF" opacity="0.8"/>
+            <defs>
+              <linearGradient id="fox-gradient" x1="15" y1="15" x2="85" y2="90" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#F59E0B" />
+                <stop offset="50%" stop-color="#EA580C" />
+                <stop offset="100%" stop-color="#B45309" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Fox AI</h1>
+          <span class="tagline">Local Intelligence</span>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <!-- Connection Status Indicator -->
+        <div class="badge status-badge" id="connection-status">
+          <span class="status-dot disconnected"></span>
+          <span class="status-label">Checking API...</span>
+        </div>
+
+        <!-- Privacy Shield Badge -->
+        <div class="badge privacy-badge">
+          <span class="icon">🔒</span>
+          <span>No data stored — cleared on close</span>
+        </div>
+
+        <!-- Model Info Badge -->
+        <div class="badge model-badge" id="model-info-badge">
+          <span class="icon">🤖</span>
+          <span id="active-model-name">Loading model...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stat Dashboard Bar -->
+    <section class="stat-dashboard" id="stat-dashboard">
+      <div class="stat-pill">
+        <span class="stat-name">Latency (TTFT)</span>
+        <span class="stat-value" id="stat-latency">—</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-name">Prompt Tokens</span>
+        <span class="stat-value" id="stat-prompt-tokens">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-name">Gen Tokens</span>
+        <span class="stat-value" id="stat-gen-tokens">0</span>
+      </div>
+      <div class="stat-pill highlight">
+        <span class="stat-name">Total Tokens</span>
+        <span class="stat-value" id="stat-total-tokens">0</span>
+      </div>
+    </section>
+
+    <!-- Main Chat Window Area -->
+    <main class="chat-viewport">
+      <div class="chat-history" id="chat-history">
+        <!-- Welcome Message (Initial State) -->
+        <div class="welcome-container" id="welcome-message">
+          <svg class="welcome-fox" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 90L15 45L30 15L50 45L70 15L85 45L50 90Z" fill="url(#welcome-fox-gradient)" />
+            <defs>
+              <linearGradient id="welcome-fox-gradient" x1="15" y1="15" x2="85" y2="90" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#EA580C" stop-opacity="0.2"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <h2>Welcome to Fox AI</h2>
+          <p class="welcome-desc">
+            An offline-first LLM chatbot running 100% locally on your computer.
+            Your prompts and completions reside strictly in system memory (RAM) and are permanently wiped the instant you close the window.
+          </p>
+          <div class="guarantee-card">
+            <h4>🛡️ RAM-Only Guarantee</h4>
+            <p>No log files, no database writes, no cookies, and no tracking. Absolute local privacy.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thinking Indicator (Pulsing Glow, hidden by default) -->
+      <div class="thinking-indicator" id="thinking-indicator">
+        <div class="thinking-glow"></div>
+        <div class="thinking-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <span class="thinking-text">Fox is thinking...</span>
+      </div>
+    </main>
+
+    <!-- Message Input Console -->
+    <footer class="input-console">
+      <form class="input-form" id="chat-form">
+        <button type="button" class="btn-secondary" id="clear-btn" title="Clear conversation history from RAM">
+          <span class="btn-icon">🗑️</span>
+          <span class="btn-text">Wipe RAM</span>
+        </button>
+        
+        <div class="input-wrapper">
+          <textarea 
+            id="user-input" 
+            placeholder="Send a secure message to Fox..." 
+            rows="1"
+            autocomplete="off"
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" id="send-btn" disabled>
+          <span class="btn-text">Send</span>
+          <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </footer>
+
+  </div>
+
+  <!-- Error / Missing Model Overlay (Hidden by default) -->
+  <div class="modal-overlay" id="error-modal">
+    <div class="modal-card">
+      <div class="modal-icon">⚠️</div>
+      <h3 id="modal-title">Model Connection Error</h3>
+      <div class="modal-content" id="modal-content">
+        <p>Could not connect to the local FastAPI server or the GGUF model is not loaded.</p>
+        <p class="tip">Make sure uvicorn is running, and your GGUF model is in the <code>/models</code> directory.</p>
+      </div>
+      <button class="btn-primary" onclick="window.location.reload()">Retry Connection</button>
+    </div>
+  </div>
+
+  <!-- Custom JavaScript Controller -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+# Keep models folder in git, but ignore the GGUF models themselves
