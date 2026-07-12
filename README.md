@@ -64,101 +64,17 @@ python download_model.py
 ```
 You will be prompted to select from 5 high-quality, lightweight models (ranging from 660 MB to 2.2 GB). The script will download your choice with a live progress bar and place it directly into the `models/` directory.
 
+## Manual Model Download
+
 Alternatively, you can manually download a model file and place it in the `models/` folder:
 
-|
- Model Option 
-|
- Repo Link 
-|
- Filename 
-|
- RAM Required 
-|
-|
-:---
-|
-:---
-|
-:---
-|
-:---
-|
-|
-**
-Qwen 2.5 1.5B Instruct
-**
-|
-[
-Qwen/Qwen2.5-1.5B-Instruct-GGUF
-](
-https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF
-)
-|
-`qwen2.5-1.5b-instruct-q4_k_m.gguf`
-|
- ~2.0 GB 
-|
-|
-**
-Gemma 2 2B Instruct
-**
-|
-[
-lmstudio-community/gemma-2-2b-it-GGUF
-](
-https://huggingface.co/lmstudio-community/gemma-2-2b-it-GGUF
-)
-|
-`gemma-2-2b-it-Q4_K_M.gguf`
-|
- ~3.0 GB 
-|
-|
-**
-Llama 3.2 3B Instruct
-**
-|
-[
-lmstudio-community/Llama-3.2-3B-Instruct-GGUF
-](
-https://huggingface.co/lmstudio-community/Llama-3.2-3B-Instruct-GGUF
-)
-|
-`Llama-3.2-3B-Instruct-Q4_K_M.gguf`
-|
- ~3.5 GB 
-|
-|
-**
-Phi 3 Mini 4K Instruct
-**
-|
-[
-microsoft/Phi-3-mini-4k-instruct-gguf
-](
-https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf
-)
-|
-`Phi-3-mini-4k-instruct-q4.gguf`
-|
- ~4.0 GB 
-|
-|
-**
-TinyLlama 1.1B Chat
-**
-|
-[
-TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF
-](
-https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF
-)
-|
-`tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`
-|
- ~1.2 GB 
-|
+| Model Option | Repo Link | Filename | RAM Required |
+|---|---|---|---|
+| **Qwen 2.5 1.5B Instruct** | [Qwen/Qwen2.5-1.5B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF) | `qwen2.5-1.5b-instruct-q4_k_m.gguf` | ~2.0 GB |
+| **Gemma 2 2B Instruct** | [lmstudio-community/gemma-2-2b-it-GGUF](https://huggingface.co/lmstudio-community/gemma-2-2b-it-GGUF) | `gemma-2-2b-it-Q4_K_M.gguf` | ~3.0 GB |
+| **Llama 3.2 3B Instruct** | [lmstudio-community/Llama-3.2-3B-Instruct-GGUF](https://huggingface.co/lmstudio-community/Llama-3.2-3B-Instruct-GGUF) | `Llama-3.2-3B-Instruct-Q4_K_M.gguf` | ~3.5 GB |
+| **Phi 3 Mini 4K Instruct** | [microsoft/Phi-3-mini-4k-instruct-gguf](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | `Phi-3-mini-4k-instruct-q4.gguf` | ~4.0 GB |
+| **TinyLlama 1.1B Chat** | [TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) | `tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf` | ~1.2 GB |
 
 *The folder structure should look like:*
 ```
