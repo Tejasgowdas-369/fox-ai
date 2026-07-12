@@ -136,21 +136,7 @@ flowchart TD
     Formatter -->|Prompt Context Tokens| Singleton
     Queue <-->|Token Producer Thread| LlamaCPP
 
-    %% Custom Styling
-    style UI fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
-    style Stats fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#f8fafc
-    style WSClient fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
-    
-    style WSServer fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#f8fafc
-    style Health fill:#1e293b,stroke:#a855f7,stroke-width:1px,color:#f8fafc
-    style Formatter fill:#1e293b,stroke:#a855f7,stroke-width:1px,color:#f8fafc
-    style Queue fill:#1e293b,stroke:#ea580c,stroke-width:2px,color:#f8fafc
-    
-    style Singleton fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#f8fafc
-    style LlamaCPP fill:#b45309,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
-    style GGUF fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#f8fafc
-    style FolderScanner fill:#312e81,stroke:#6366f1,stroke-width:1px,color:#f8fafc
-```
+   
 
 1.  WebSocket Handshake: On connecting to the frontend, a persistent WebSocket tunnel is established at `ws://127.0.0.1:8000/chat`.
 2.  State Initialization: An empty list `chat_history = []` is initialized in RAM for that WebSocket.
