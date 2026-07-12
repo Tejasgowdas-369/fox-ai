@@ -2,6 +2,7 @@ import os
 import time
 import asyncio
 import threading
+import base64
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,7 @@ from fastapi.responses import FileResponse
 from .config import MODEL_PATH, N_CTX, IN_MEMORY_GUARANTEE, format_prompt
 from .model import ModelManager
 from .image_generator import LocalImageGenerator
+from .document_parser import extract_text_from_file
 
 # =====================================================================
 # IN-MEMORY ONLY GUARANTEE
@@ -203,11 +205,34 @@ async def chat_endpoint(websocket: WebSocket):
             # ---------------------------------------------------------
             context_prefix = ""
             if files_payload:
+                # Ensure a safe temp uploads directory exists
+                temp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "temp_uploads"))
+                os.makedirs(temp_dir, exist_ok=True)
+                
                 context_prefix += "--- Attached Local Files Context ---\n"
                 for file_item in files_payload:
                     filename = file_item.get("name", "unknown_file")
-                    content = file_item.get("content", "")
-                    context_prefix += f"[File: {filename}]\n{content}\n[End of File]\n\n"
+                    base64_content = file_item.get("content", "")
+                    
+                    try:
+                        # Decode base64 file content
+                        file_bytes = base64.b64decode(base64_content)
+                        temp_file_path = os.path.join(temp_dir, filename)
+                        
+                        # Write to temporary file
+                        with open(temp_file_path, "wb") as temp_file:
+                            temp_file.write(file_bytes)
+                        
+                        # Parse file to extract plain text
+                        extracted_text = extract_text_from_file(temp_file_path)
+                        context_prefix += f"[File: {filename}]\n{extracted_text}\n[End of File]\n\n"
+                        
+                        # Clean up temp file
+                        if os.path.exists(temp_file_path):
+                            os.remove(temp_file_path)
+                    except Exception as err:
+                        context_prefix += f"[File: {filename}]\n[Error parsing file content: {str(err)}]\n[End of File]\n\n"
+                
                 context_prefix += "------------------------------------\n\n"
             
             # Combine attachments with prompt message

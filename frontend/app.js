@@ -479,11 +479,8 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAttachmentPills();
       };
 
-      if (fileType === "image") {
-        reader.readAsDataURL(file); // Reads as base64 string
-      } else {
-        reader.readAsText(file); // Reads code or text document
-      }
+      // Always read as Data URL (base64) so we can transmit all files (including binary files like PDF) safely
+      reader.readAsDataURL(file);
     });
 
     fileInput.value = ""; // Clear file picker value
