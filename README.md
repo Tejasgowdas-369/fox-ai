@@ -1,4 +1,4 @@
-# 🦊 Fox AI — Offline-First Local LLM Chatbot
+# 🦊 Fox AI: Private Local LLM Chatbot
 
 Fox AI is a lightweight, privacy-focused, 100% offline desktop-style AI chatbot. Powered by a Python FastAPI backend and `llama-cpp-python`, Fox AI loads and runs quantized GGUF models completely on-device. The application requires zero internet connection during inference and features a premium glassmorphic dark-themed UI.
 

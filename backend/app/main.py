@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Fox AI",
-    description="Offline-First Local LLM Chatbot",
+    description="Private Local LLM Chatbot",
     lifespan=lifespan
 )
 
