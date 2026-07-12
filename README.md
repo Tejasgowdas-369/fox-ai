@@ -1,42 +1,41 @@
-# 🦊 Fox AI: Private Local LLM Chatbot
+ 🦊 Fox AI: Private Local LLM Chatbot
 
 Fox AI is a lightweight, privacy-focused, 100% offline desktop-style AI chatbot. Powered by a Python FastAPI backend and `llama-cpp-python`, Fox AI loads and runs quantized GGUF models completely on-device. The application requires zero internet connection during inference and features a premium glassmorphic dark-themed UI.
 
 ---
+ 🔒 In-Memory Only Privacy Guarantee
+> Fox AI stores nothing — all conversation data lives strictly in RAM and is permanently wiped when the app closes or the connection resets.**
 
-## 🔒 In-Memory Only Privacy Guarantee
-> **Fox AI stores nothing — all conversation data lives strictly in RAM and is permanently wiped when the app closes or the connection resets.**
-
-*   **No File Persistence:** There are no databases (SQLite/PostgreSQL), no temporary JSON writes, and no disk caches.
-*   **WebSocket Scoping:** Your chat history is maintained as a Python list scoped *exclusively* to the active WebSocket session.
-*   **Garbage Collection:** Once your browser tab is closed, the connection terminates, or you click **Wipe RAM**, the Python list is dereferenced and immediately garbage-collected from the system memory.
-
----
-
-## Key Features
-*   **Zero-Build Frontend:** Written in pure Vanilla HTML, CSS, and JS. Served directly from the FastAPI server. No Node.js, `npm install`, or bundlers required.
-*   **Singleton Model Architecture:** The GGUF model is loaded once as a thread-safe singleton on server startup, preventing memory-reload leaks and requests collision.
-*   **Live Token Stats:** Measures and displays prompt tokens, generated tokens, and total session tokens in real time.
-*   **Latency Tracking:** Computes and displays Time to First Token (TTFT) in milliseconds so you can easily profile hardware performance.
-*   **Visual Excellence:** Premium responsive dark-mode styling with glassmorphism panels, glowing states, pulsing typing animations, and custom scroll areas.
+*   No File Persistence: There are no databases (SQLite/PostgreSQL), no temporary JSON writes, and no disk caches.
+*   WebSocket Scoping: Your chat history is maintained as a Python list scoped *exclusively* to the active WebSocket session.
+*   Garbage Collection: Once your browser tab is closed, the connection terminates, or you click Wipe RAM, the Python list is dereferenced and immediately garbage-collected from the system memory.
 
 ---
 
-## Prerequisites
-*   **Python:** Version 3.10 or higher.
-*   **Hardware (Recommended):** 8GB+ of system RAM.
+ Key Features
+*   Zero-Build Frontend:Written in pure Vanilla HTML, CSS, and JS. Served directly from the FastAPI server. No Node.js, `npm install`, or bundlers required.
+*   Singleton Model Architecture:The GGUF model is loaded once as a thread-safe singleton on server startup, preventing memory-reload leaks and requests collision.
+*   Live Token Stats: Measures and displays prompt tokens, generated tokens, and total session tokens in real time.
+*   Latency Tracking: Computes and displays Time to First Token (TTFT) in milliseconds so you can easily profile hardware performance.
+*   Visual Excellence: Premium responsive dark-mode styling with glassmorphism panels, glowing states, pulsing typing animations, and custom scroll areas.
 
 ---
 
-## Step-by-Step Installation
+Prerequisites
+*   Python: Version 3.10 or higher.
+*   Hardware (Recommended):** 8GB+ of system RAM.
 
-### 1. Clone the Repository
+---
+
+ Step-by-Step Installation
+
+ 1. Clone the Repository
 ```bash
 git clone https://github.com/Tejasgowdas-369/fox-ai.git
 cd fox-ai
 ```
 
-### 2. Install Python Dependencies
+2. Install Python Dependencies
 Create a virtual environment (highly recommended) and install requirements:
 ```bash
 # Create and activate virtual environment
@@ -48,14 +47,14 @@ pip install -r backend/requirements.txt
 ```
 
 > [!TIP]
-> **Windows GPU Acceleration (Optional):**
+> Windows GPU Acceleration (Optional):
 > If you have an NVIDIA GPU, you can compile `llama-cpp-python` with CUDA support to offload weights and speed up inference significantly:
 > ```powershell
 > $env:CMAKE_ARGS="-DLLAMA_CUDA=on"
 > pip install llama-cpp-python --force-reinstall --no-cache-dir
 > ```
 
-### 3. Download a GGUF Model
+3. Download a GGUF Model
 We have provided an interactive CLI download wizard to quickly install a model without leaving your terminal. Run the following command:
 ```bash
 python download_model.py
@@ -82,13 +81,12 @@ fox-ai/
     └── [your-selected-model].gguf   <-- Put model file here
 ```
 
-### 4. Run the Application
+4. Run the Application
 Start the FastAPI server using Uvicorn. The server dynamically checks for the GGUF model and loads it:
 ```bash
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
-
-### 5. Access the Interface
+ 5. Access the Interface
 Open your web browser and navigate to:
 ```
 http://127.0.0.1:8000
@@ -96,8 +94,7 @@ http://127.0.0.1:8000
 *(The frontend is served directly from uvicorn at the root path, meaning zero setup or port conflicts!)*
 
 ---
-
-## How It Works (Local Architecture)
+ How It Works (Local Architecture)
 
 ```mermaid
 graph TD
@@ -111,13 +108,13 @@ graph TD
     style GGUF fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#f8fafc
 ```
 
-1.  **WebSocket Handshake:** On connecting to the frontend, a persistent WebSocket tunnel is established at `ws://127.0.0.1:8000/chat`.
-2.  **State Initialization:** An empty list `chat_history = []` is initialized in RAM for that WebSocket.
-3.  **Prompt Tokenization:** When a user types a message, the backend concatenates previous context using a model-specific template (Gemma 2 or Phi-3) and tokenizes the result using `model.tokenize()` to calculate the exact prompt token count.
-4.  **Async Thread Execution:** To prevent blocking the async event loop of FastAPI, the model's generator runs in a separate thread. Generated chunks are pushed to an async queue and streamed immediately to the client.
-5.  **Token Processing:** The frontend calculates the time elapsed until the first token returns (Time-To-First-Token) and appends incoming tokens to the chat log with a smooth sliding animation.
+1.  WebSocket Handshake: On connecting to the frontend, a persistent WebSocket tunnel is established at `ws://127.0.0.1:8000/chat`.
+2.  State Initialization: An empty list `chat_history = []` is initialized in RAM for that WebSocket.
+3.  Prompt Tokenization When a user types a message, the backend concatenates previous context using a model-specific template (Gemma 2 or Phi-3) and tokenizes the result using `model.tokenize()` to calculate the exact prompt token count.
+4.  Async Thread Execution:To prevent blocking the async event loop of FastAPI, the model's generator runs in a separate thread. Generated chunks are pushed to an async queue and streamed immediately to the client.
+5.  Token Processing: The frontend calculates the time elapsed until the first token returns (Time-To-First-Token) and appends incoming tokens to the chat log with a smooth sliding animation.
 
 ---
 
-## License
+ License
 MIT License. Feel free to modify and adapt this for local prototyping and private installations.
